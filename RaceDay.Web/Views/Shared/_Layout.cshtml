@@ -18,14 +18,52 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+
+                    <!-- LEFT SIDE OF NAVIGATION -->
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
+
+                        @if (Context.Session.GetString("JwtToken") != null)
+                        {
+                            @if (Context.Session.GetString("UserRole") == "Organiser")
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="Organiser" asp-action="Dashboard">Organiser Dashboard</a>
+                                </li>
+                            }
+                            else if (Context.Session.GetString("UserRole") == "Participant")
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="Participant" asp-action="MyEnrolments">My Events</a>
+                                </li>
+                            }
+                        }
                     </ul>
+
+                    <!-- RIGHT SIDE OF NAVIGATION (Login/Register) -->
+                    <ul class="navbar-nav">
+                        @if (Context.Session.GetString("JwtToken") != null)
+                        {
+                            <li class="nav-item">
+                                <span class="nav-link text-dark">Hello, @Context.Session.GetString("UserEmail")</span>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-danger" asp-controller="Account" asp-action="Logout">Logout</a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">Login</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Register">Register</a>
+                            </li>
+                        }
+                    </ul>
+
                 </div>
             </div>
         </nav>

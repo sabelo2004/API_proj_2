@@ -26,5 +26,8 @@ namespace API_proj_2.Models
         [Required]
         [MaxLength(20)]
         public string Status { get; set; } = "Planned";
+
+  
+        public string? BannerImageUrl { get; set; }
     }
 }

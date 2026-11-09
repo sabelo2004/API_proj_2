@@ -1,7 +1,27 @@
+using RaceDay.Web.Services; // Required for ApiService
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// 1. Add Session support (Required for Login/Logout)
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
+// 2. Add HttpContextAccessor (Required for ApiService to read the Session)
+builder.Services.AddHttpContextAccessor();
+
+// 3. Register the ApiService with the Base Address from appsettings.json
+builder.Services.AddHttpClient<ApiService>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"]);
+});
 
 var app = builder.Build();
 
@@ -17,6 +37,9 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+// 4. Tell the app to use Session (Must be between UseRouting and UseAuthorization)
+app.UseSession();
 
 app.UseAuthorization();
 

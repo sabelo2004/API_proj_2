@@ -1,0 +1,43 @@
+﻿@model RaceDay.Web.ViewModels.EventDetailsViewModel
+@{
+    ViewData["Title"] = Model.Event.EventName;
+}
+
+<div class="container mt-5">
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    <div class="card shadow">
+        <div class="card-header bg-dark text-white">
+            <h2>@Model.Event.EventName</h2>
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">@Model.Event.Location - @Model.Event.EventDate.ToString("dd MMM yyyy")</h5>
+            <p class="card-text">@Model.Event.Description</p>
+            <p><strong>Status:</strong> @Model.Event.Status</p>
+
+            <hr />
+
+            <h4>Enrol in this Event</h4>
+            <form asp-action="Enrol" method="post">
+                <input type="hidden" name="eventId" value="@Model.Event.EventID" />
+
+                <div class="mb-3">
+                    <label class="form-label">Select Category</label>
+                    <select name="categoryId" class="form-select" required>
+                        <option value="">-- Select a Category --</option>
+                        @foreach (var cat in Model.Categories)
+                        {
+                            <!-- Changed cat.Price to cat.EntryFee -->
+                            <option value="@cat.CategoryID">@cat.CategoryName - R@cat.EntryFee</option>
+                        }
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-success">Enrol Now</button>
+            </form>
+        </div>
+    </div>
+</div>

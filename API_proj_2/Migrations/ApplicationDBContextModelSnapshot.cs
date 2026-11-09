@@ -62,6 +62,9 @@ namespace API_proj_2.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EventID"));
 
+                    b.Property<string>("BannerImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 

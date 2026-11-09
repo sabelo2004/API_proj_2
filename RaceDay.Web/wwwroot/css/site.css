@@ -1,22 +1,95 @@
+/* Default Template Styles */
 html {
-  font-size: 14px;
+    font-size: 14px;
+    position: relative;
+    min-height: 100%;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    html {
+        font-size: 16px;
+    }
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
 body {
-  margin-bottom: 60px;
+    margin-bottom: 60px;
+    background-color: #f4f7f6; /* Light grey/blue background */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* --- RACEDAY ENERGETIC THEME --- */
+
+/* 1. Navbar */
+.navbar {
+    background-color: #0f172a !important; /* Dark navy blue */
+    border-bottom: 4px solid #ef4444; /* Racing red line */
+}
+
+.navbar-brand, .nav-link {
+    color: #ffffff !important;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+    .nav-link:hover {
+        color: #ef4444 !important; /* Red hover effect */
+    }
+
+/* 2. Cards (Events) */
+.card {
+    border: none;
+    border-radius: 12px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    background-color: #ffffff;
+}
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important;
+    }
+
+.card-header {
+    border-top-left-radius: 12px !important;
+    border-top-right-radius: 12px !important;
+    font-weight: bold;
+}
+
+/* 3. Buttons */
+.btn-primary {
+    background-color: #ef4444; /* Racing red */
+    border-color: #ef4444;
+    font-weight: bold;
+}
+
+    .btn-primary:hover {
+        background-color: #dc2626;
+        border-color: #dc2626;
+    }
+
+.btn-success {
+    background-color: #10b981; /* Energetic green */
+    border-color: #10b981;
+    font-weight: bold;
+}
+
+/* 4. Tables */
+.table thead {
+    background-color: #0f172a;
+    color: white;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #fef2f2; /* Very light red on hover */
+}
+
+/* 5. Status Badges */
+.badge {
+    font-size: 0.9rem;
+    padding: 0.5em 0.8em;
+    border-radius: 20px;
 }

@@ -1,8 +1,54 @@
-﻿@{
+﻿@model IEnumerable<RaceDay.Web.ViewModels.EventViewModel>
+@{
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="text-center mb-5">
+    <h1 class="display-4">Welcome to RaceDay</h1>
+    <p>Find your next race and join the community!</p>
 </div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info text-center">
+        No events found. Check back later!
+    </div>
+}
+else
+{
+    <div class="row">
+        @foreach (var ev in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+
+                    <!-- IMAGE DISPLAY LOGIC -->
+                    @if (!string.IsNullOrEmpty(ev.BannerImageUrl))
+                    {
+                        <!-- Change https://localhost:7275 to your actual API URL -->
+                        <img src="https://localhost:7275@ev.BannerImageUrl" class="card-img-top" alt="@ev.EventName" style="height: 200px; object-fit: cover;">
+                    }
+                    else
+                    {
+                        <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <h3>@ev.Status</h3>
+                        </div>
+                    }
+                    <!-- END IMAGE DISPLAY LOGIC -->
+
+                    <div class="card-body">
+                        <h5 class="card-title">@ev.EventName</h5>
+                        <p class="card-text text-muted">
+                            <strong>Date:</strong> @ev.EventDate.ToString("dd MMM yyyy")<br />
+                            <strong>Location:</strong> @ev.Location<br />
+                            <strong>Description:</strong> @ev.Description
+                        </p>
+                    </div>
+                    <div class="card-footer bg-white border-top-0">
+                        <a asp-controller="Participant" asp-action="EventDetails" asp-route-id="@ev.EventID" class="btn btn-primary w-100">View Details</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

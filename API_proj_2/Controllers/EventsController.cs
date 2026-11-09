@@ -1,8 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
-using API_proj_2.Data;
+﻿using API_proj_2.Data;
 using API_proj_2.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace API_proj_2.Controllers
 {
@@ -11,68 +10,131 @@ namespace API_proj_2.Controllers
     public class EventsController : ControllerBase
     {
         private readonly ApplicationDBContext _context;
-        public EventsController(ApplicationDBContext context) => _context = context;
+        private readonly IWebHostEnvironment _environment; // Used to find the wwwroot path
 
-        /// <summary>Lists all events. Public endpoint.</summary>
-        [HttpGet]
-        [AllowAnonymous]
-        public IActionResult GetEvents() => Ok(_context.Events.ToList());
-
-        /// <summary>Returns a single event by ID. Public endpoint.</summary>
-        [HttpGet("{id}")]
-        [AllowAnonymous]
-        public IActionResult GetEvent(int id)
+        public EventsController(ApplicationDBContext context, IWebHostEnvironment environment)
         {
-            var ev = _context.Events.Find(id);
-            return ev == null ? NotFound() : Ok(ev);
+            _context = context;
+            _environment = environment;
         }
 
-        /// <summary>Creates a new event. Organiser role required.</summary>
-        [HttpPost]
-        [Authorize(Roles = "Organiser")]
-        public IActionResult CreateEvent(Event newEvent)
+        // GET: api/Events
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Event>>> GetEvents()
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            newEvent.OrganiserID = userId;
-            newEvent.EventID = 0;
+            return await _context.Events.ToListAsync();
+        }
+
+        // GET: api/Events/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Event>> GetEvent(int id)
+        {
+            var @event = await _context.Events.FindAsync(id);
+            if (@event == null) return NotFound();
+            return @event;
+        }
+
+        // POST: api/Events
+        [HttpPost]
+        public async Task<ActionResult<Event>> CreateEvent([FromForm] EventDto dto, IFormFile? BannerImage)
+        {
+            var newEvent = new Event
+            {
+                EventName = dto.EventName,
+                EventDate = dto.EventDate,
+                Location = dto.Location,
+                Description = dto.Description,
+                Status = dto.Status,
+                OrganiserID = dto.OrganiserID
+            };
+
+            // Handle Local Image Upload (to wwwroot)
+            if (BannerImage != null && BannerImage.Length > 0)
+            {
+                try
+                {
+                    // 1. Get the path to wwwroot/images
+                    var uploadsFolder = Path.Combine(_environment.WebRootPath, "images");
+
+                    // Create the folder if it doesn't exist
+                    if (!Directory.Exists(uploadsFolder))
+                    {
+                        Directory.CreateDirectory(uploadsFolder);
+                    }
+
+                    // 2. Create a unique filename
+                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(BannerImage.FileName);
+                    var filePath = Path.Combine(uploadsFolder, fileName);
+
+                    // 3. Save the file to the hard drive
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await BannerImage.CopyToAsync(stream);
+                    }
+
+                    // 4. Save the relative URL to the database
+                    // (The Web App will prepend the API base URL to this)
+                    newEvent.BannerImageUrl = $"/images/{fileName}";
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Image Upload Failed: {ex.Message}");
+                }
+            }
 
             _context.Events.Add(newEvent);
-            _context.SaveChanges();
-            return CreatedAtAction(nameof(GetEvent), new { id = newEvent.EventID }, newEvent);
+            await _context.SaveChangesAsync();
+
+            return StatusCode(201, newEvent);
         }
 
-        /// <summary>Updates an event. Organiser must own it.</summary>
+        // PUT: api/Events/5
         [HttpPut("{id}")]
-        [Authorize(Roles = "Organiser")]
-        public IActionResult UpdateEvent(int id, Event updated)
+        public async Task<IActionResult> UpdateEvent(int id, Event @event)
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            var ev = _context.Events.Find(id);
-            if (ev == null) return NotFound();
-            if (ev.OrganiserID != userId) return Forbid();
+            if (id != @event.EventID) return BadRequest();
 
-            ev.EventName = updated.EventName;
-            ev.EventDate = updated.EventDate;
-            ev.Location = updated.Location;
-            ev.Description = updated.Description;
-            ev.Status = updated.Status;
-            _context.SaveChanges();
-            return Ok(ev);
+            _context.Entry(@event).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!EventExists(id)) return NotFound();
+                else throw;
+            }
+
+            return NoContent();
         }
 
-        /// <summary>Deletes an event. Organiser must own it.</summary>
+        // DELETE: api/Events/5
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Organiser")]
-        public IActionResult DeleteEvent(int id)
+        public async Task<IActionResult> DeleteEvent(int id)
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            var ev = _context.Events.Find(id);
-            if (ev == null) return NotFound();
-            if (ev.OrganiserID != userId) return Forbid();
+            var @event = await _context.Events.FindAsync(id);
+            if (@event == null) return NotFound();
 
-            _context.Events.Remove(ev);
-            _context.SaveChanges();
-            return Ok("Deleted");
+            _context.Events.Remove(@event);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
+
+        private bool EventExists(int id)
+        {
+            return _context.Events.Any(e => e.EventID == id);
+        }
+    }
+
+    public class EventDto
+    {
+        public string EventName { get; set; }
+        public DateTime EventDate { get; set; }
+        public string Location { get; set; }
+        public string Description { get; set; }
+        public string Status { get; set; }
+        public int OrganiserID { get; set; }
     }
 }
